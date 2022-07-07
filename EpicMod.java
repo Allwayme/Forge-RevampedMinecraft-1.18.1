@@ -1,28 +1,47 @@
 package net.drgalaxy.epicmod;
 
 import net.drgalaxy.epicmod.block.ModBlocks;
+import net.drgalaxy.epicmod.block.ModWoodTypes;
 import net.drgalaxy.epicmod.config.EpicModClientConfigs;
 import net.drgalaxy.epicmod.config.EpicModCommonConfigs;
 import net.drgalaxy.epicmod.effect.ModEffects;
 import net.drgalaxy.epicmod.enchantment.ModEnchantments;
 
+import net.drgalaxy.epicmod.entity.ModBlockEntities;
 import net.drgalaxy.epicmod.entity.ModEntityTypes;
 
-import net.drgalaxy.epicmod.entity.client.FungalStickRenderer;
-import net.drgalaxy.epicmod.entity.client.TestRenderer;
+
+
 import net.drgalaxy.epicmod.item.ModItems;
 
 
 import net.drgalaxy.epicmod.painting.ModPaintings;
+import net.drgalaxy.epicmod.particle.ModParticles;
 import net.drgalaxy.epicmod.potion.ModPotions;
 import net.drgalaxy.epicmod.sound.ModSounds;
 import net.drgalaxy.epicmod.util.BetterBrewingRecipe;
 
+import net.drgalaxy.epicmod.villager.ModPOIs;
 import net.drgalaxy.epicmod.villager.ModVillagers;
+import net.drgalaxy.epicmod.world.dimension.ModDimensions;
 import net.drgalaxy.epicmod.world.structure.ModStructures;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.blockentity.SignRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.monster.Endermite;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComposterBlock;
@@ -45,6 +64,7 @@ import software.bernie.geckolib3.GeckoLib;
 @Mod(EpicMod.MOD_ID)
 public class EpicMod
 {
+
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String MOD_ID = "epicmod";
@@ -63,13 +83,17 @@ public class EpicMod
         ModStructures.register(eventBus);
         ModVillagers.register(eventBus);
         ModSounds.register(eventBus);
+        ModParticles.register(eventBus);
+        ModDimensions.register();
+        ModPOIs.register(eventBus);
+        ModBlockEntities.register(eventBus);
 
 
 
         GeckoLib.initialize();
 
         eventBus.addListener(this::setup);
-        eventBus.addListener(this::clientSetup);
+
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, EpicModClientConfigs.SPEC,"EpicMod-client.toml");
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, EpicModCommonConfigs.SPEC,"EpicMod-common.toml");
@@ -79,43 +103,27 @@ public class EpicMod
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    private void clientSetup(final FMLClientSetupEvent event) {
 
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.PINK_DANDELION.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.POTTED_PINK_DANDELION.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.CORN_PLANT.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.TALL_ROS.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.POTTED_TALL_ROS.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.OLD_TREE_TRUNK.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.MAPLE_LEAVES.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.MAPLE_SAPLING.get(), RenderType.cutout());
-
-        ItemBlockRenderTypes.setRenderLayer(ModBlocks.SUNNY_GLASS.get(), RenderType.translucent());
-
-        EntityRenderers.register(ModEntityTypes.TEST.get(), TestRenderer::new);
-        EntityRenderers.register(ModEntityTypes.FUNGAL_STICK.get(), FungalStickRenderer::new);
-
-
-
-
-
-
-
-
-    }
 
     private void setup(final FMLCommonSetupEvent event) {
         event.enqueueWork(()-> {
             ((FlowerPotBlock) Blocks.FLOWER_POT).addPlant(ModBlocks.PINK_DANDELION.getId(), ModBlocks.POTTED_PINK_DANDELION);
-            ((FlowerPotBlock) Blocks.FLOWER_POT).addPlant(ModBlocks.TALL_ROS.getId(), ModBlocks.POTTED_TALL_ROS);
             ComposterBlock.COMPOSTABLES.put(ModItems.CORN_SEED.get(),0.3f);
             ComposterBlock.COMPOSTABLES.put(ModItems.CORN.get(),0.65f);
+            ComposterBlock.COMPOSTABLES.put(ModItems.MANGO.get(),0.5f);
+            ComposterBlock.COMPOSTABLES.put(ModItems.PEELED_MANGO.get(),0.5f);
+            ComposterBlock.COMPOSTABLES.put(ModBlocks.MANGO_LEAVES.get(),0.6f);
             BrewingRecipeRegistry.addRecipe(new BetterBrewingRecipe(Potions.AWKWARD,
                     ModItems.ICE_PIECES.get(), ModPotions.FREEZE_POTION.get()));
 
             ModVillagers.registerPOIs();
+
+            BlockEntityRenderers.register(ModBlockEntities.SIGN_BLOCK_ENTITIES.get(), SignRenderer::new);
+            Sheets.addWoodType(ModWoodTypes.MAPLE);
         });
 
-    }
+
+      }
+
 
 }
